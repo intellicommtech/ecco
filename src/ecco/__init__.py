@@ -20,7 +20,7 @@ from ecco.util import load_config, pack_tokenizer_config
 
 
 def from_pretrained(hf_model_id: str,
-                    model: Optional[PreTrainedModel] = None,
+                    checkpoint_dir: Optional[str] = None,
                     model_config: Optional[Dict[str, Any]] = None,
                     activations: Optional[bool] = False,
                     attention: Optional[bool] = False,
@@ -82,8 +82,10 @@ def from_pretrained(hf_model_id: str,
     else:
         model_cls = AutoModel
 
-    if model is None:
+    if checkpoint_dir is None:
         model = model_cls.from_pretrained(hf_model_id, output_hidden_states=hidden_states, output_attentions=attention)
+    else:
+        model = model_cls.from_pretrained(checkpoint_dir, local_files_only=True, output_hidden_states=hidden_states, output_attentions=attention)
 
     lm_kwargs = {
         'model_name': hf_model_id,
