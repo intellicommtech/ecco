@@ -55,7 +55,7 @@ def from_pretrained(hf_model_id: str,
     ```
 
     Args:
-        model (Optional[PreTrainedModel]): Trained transformer model. If not provided then the default model corresponding to hf_model_id will be loaded
+        checkpoint_dir (Optional[str]): checkpoint dir to load the trained model from
         hf_model_id (str): Name of the model identifying it in the HuggingFace model hub. e.g. 'distilgpt2', 'bert-base-uncased'.
         model_config (Optional[Dict[str, Any]]): Custom model configuration. If the value is None the config file will be
                                                  searched in the model-config.yaml. Defaults to None.
