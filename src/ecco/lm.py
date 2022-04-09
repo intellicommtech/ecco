@@ -152,6 +152,7 @@ class LM(object):
                  attribution: Optional[List[str]] = [],
                  generate: Optional[int] = None,
                  beam_size: int = 1,
+                 print_confidence_score: bool = False,
                  **generate_kwargs: Any):
         """
         Generate tokens in response to an input prompt.
@@ -169,6 +170,7 @@ class LM(object):
                 consults top_k and/or top_p to generate more interesting output.
             attribution: List of attribution methods to be calculated. By default, it does not calculate anything.
             beam_size: Beam size to consider while generating
+            print_confidence_score: Whether to print confidence score. Currently only supported when beam_size > 1 (i.e. for beam search)
             generate_kwargs: Other arguments to be passed directly to self.model.generate
         """
 
@@ -241,7 +243,10 @@ class LM(object):
             raise NotImplementedError(f"Unexpected output type: {type(output)}")
 
         assert prediction_ids != []
-        assert len(prediction_ids) == len(prediction_scores)
+        if beam_size == 1:
+            assert len(prediction_ids) == len(prediction_scores)
+        elif print_confidence_score:
+            print("Confidence Score = %0.2f" % np.exp(np.array(output.sequences_scores.cpu()[0])))
         for pred_id, scores in zip(prediction_ids, prediction_scores):
             prediction_logits.append(scores[0][pred_id])
 
