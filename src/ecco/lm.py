@@ -255,7 +255,7 @@ class LM(object):
             pred_score = np.exp(np.array(output.sequences_scores.cpu()[i]))
             print(f"Result {i+1}:")
             print(f"Sequence: {pred_seq}")
-            print(f"Score: {pred_score}")
+            print("Score: .2f" % pred_score)
 
         for pred_id, scores in zip(prediction_ids, prediction_scores):
             prediction_logits.append(scores[0][pred_id])
