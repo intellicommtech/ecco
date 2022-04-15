@@ -152,7 +152,7 @@ class LM(object):
                  attribution: Optional[List[str]] = [],
                  generate: Optional[int] = None,
                  beam_size: int = 1,
-                 print_confidence_score: bool = False,
+                 num_return_sequences: int = 1,
                  **generate_kwargs: Any):
         """
         Generate tokens in response to an input prompt.
@@ -170,11 +170,12 @@ class LM(object):
                 consults top_k and/or top_p to generate more interesting output.
             attribution: List of attribution methods to be calculated. By default, it does not calculate anything.
             beam_size: Beam size to consider while generating
-            print_confidence_score: Whether to print confidence score. Currently only supported when beam_size > 1 (i.e. for beam search)
+            num_return_sequences: number of sequences to return
             generate_kwargs: Other arguments to be passed directly to self.model.generate
         """
 
         assert self.model_type in ['enc-dec', 'causal'], f"generate method not supported for model type '{self.model_type}'"
+        assert num_return_sequences <= beam_size, "number of return sequences should be less than or equal to beam size"
 
         top_k = top_k if top_k is not None else self.model.config.top_k
         top_p = top_p if top_p is not None else self.model.config.top_p
@@ -228,6 +229,7 @@ class LM(object):
             temperature=temperature,
             return_dict_in_generate=True,
             output_scores=True,
+            num_return_sequences=num_return_sequences,
             **generate_kwargs
         )
 
@@ -245,8 +247,16 @@ class LM(object):
         assert prediction_ids != []
         if beam_size == 1:
             assert len(prediction_ids) == len(prediction_scores)
-        elif print_confidence_score:
-            print("Confidence Score = %0.2f" % np.exp(np.array(output.sequences_scores.cpu()[0])))
+
+        # print the generated sequences & confidence scores
+        generated_tokens = output.sequences.reshape((beam_size, output.sequences.shape[1]))
+        for i in range(num_return_sequences):
+            pred_seq = "".join(self.tokenizer.batch_decode(generated_tokens[i, :], skip_special_tokens=True))
+            pred_score = np.exp(np.array(output.sequences_scores.cpu()[i]))
+            print(f"Result {i+1}:")
+            print(f"Sequence: {pred_seq}")
+            print(f"Score: {pred_score}")
+
         for pred_id, scores in zip(prediction_ids, prediction_scores):
             prediction_logits.append(scores[0][pred_id])
 
